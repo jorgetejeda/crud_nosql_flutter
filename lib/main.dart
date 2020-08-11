@@ -23,10 +23,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final DatabaseHelper databaseHelper = new DatabaseHelper();
   final _nameController = TextEditingController();
   final _courseController = TextEditingController();
   final _formKey = new GlobalKey<FormState>();
+  Student student;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Form(
             key: _formKey,
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
                   TextFormField(
@@ -76,5 +76,18 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void _submitStudent(BuildContext context) {}
+  void _submitStudent(BuildContext context) async {
+    if (_formKey.currentState.validate()) {
+      if (student == null) {
+        Student st = new Student(
+            name: _nameController.text, course: _courseController.text);
+        await DatabaseHelper.db.insertStudent(st).then((id) => {
+              print(id),
+              _nameController.clear(),
+              _courseController.clear(),
+              print('Se ha agregado el estudiante ${id}')
+            });
+      }
+    }
+  }
 }
