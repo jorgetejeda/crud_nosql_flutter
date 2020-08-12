@@ -1,8 +1,9 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/sqlite_api.dart';
+
+import 'Model/student.dart';
 
 class DatabaseHelper {
   DatabaseHelper._();
@@ -51,16 +52,4 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete('student', where: "id = ?", whereArgs: [id]);
   }
-}
-
-class Student {
-  int id;
-  String name;
-  String course;
-
-  Student({@required this.name, @required this.course, this.id});
-  Map<String, dynamic> toMap() => {
-        'name': name,
-        'course': course,
-      };
 }

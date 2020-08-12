@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'Model/student.dart';
 import 'database.helper.dart';
 
 void main() => runApp(MyApp());
