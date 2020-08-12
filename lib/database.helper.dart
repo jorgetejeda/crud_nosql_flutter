@@ -10,8 +10,7 @@ class DatabaseHelper {
   static Database _database;
 
   Future<Database> get database async {
-    if (_database != null) return database;
-    _database = await initDB();
+    _database ??= await initDB();
     return _database;
   }
 
@@ -32,7 +31,8 @@ class DatabaseHelper {
   }
 
   Future<List<Student>> getStudentList() async {
-    final List<Map<String, dynamic>> maps = await _database.query('student');
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('student');
     return List.generate(
         maps.length,
         (index) => Student(
@@ -41,12 +41,16 @@ class DatabaseHelper {
             course: maps[index]['course']));
   }
 
-  Future<int> updateStudent(Student student) async =>
-      await _database.update('student', student.toMap(),
-          where: "id = ?", whereArgs: [student.id]);
+  Future<int> updateStudent(Student student) async {
+    final db = await database;
+    return await db.update('student', student.toMap(),
+        where: "id = ?", whereArgs: [student.id]);
+  }
 
-  Future<void> deleteStudent(Student student) async => await _database
-      .delete('student', where: "id = ?", whereArgs: [student.id]);
+  Future<void> deleteStudent(int id) async {
+    final db = await database;
+    return await db.delete('student', where: "id = ?", whereArgs: [id]);
+  }
 }
 
 class Student {

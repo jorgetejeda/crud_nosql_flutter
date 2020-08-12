@@ -27,6 +27,8 @@ class _MyHomePageState extends State<MyHomePage> {
   final _courseController = TextEditingController();
   final _formKey = new GlobalKey<FormState>();
   Student student;
+  int updateIndex;
+  List<Student> studentList;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 children: [
                   TextFormField(
-                    decoration: new InputDecoration(labelText: 'Name'),
+                    decoration: new InputDecoration(labelText: 'Nombre'),
                     controller: _nameController,
                     validator: (val) =>
                         val.isNotEmpty ? null : 'Nombre no debe estar vacio',
@@ -66,7 +68,68 @@ class _MyHomePageState extends State<MyHomePage> {
                           )),
                       onPressed: () {
                         _submitStudent(context);
-                      })
+                      }),
+                  FutureBuilder(
+                    future: DatabaseHelper.db.getStudentList(),
+                    builder: (context, snapShot) {
+                      if (snapShot.hasData) {
+                        studentList = snapShot.data;
+                        return ListView.builder(
+                            shrinkWrap: true,
+                            itemCount:
+                                studentList == null ? 0 : studentList.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              Student st = studentList[index];
+                              return Card(
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: width * 0.6,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Nombre: ${st.name}',
+                                              style: TextStyle(fontSize: 15)),
+                                          Text('Curso: ${st.course}',
+                                              style: TextStyle(
+                                                  fontSize: 15,
+                                                  color: Colors.black54)),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                        icon: Icon(
+                                          Icons.edit,
+                                          color: Colors.blueAccent,
+                                        ),
+                                        onPressed: () {
+                                          _nameController.text = st.name;
+                                          _courseController.text = st.course;
+                                          student = st;
+                                          updateIndex = index;
+                                        }),
+                                    IconButton(
+                                        icon: Icon(
+                                          Icons.delete,
+                                          color: Colors.red,
+                                        ),
+                                        onPressed: () {
+                                          DatabaseHelper.db
+                                              .deleteStudent(st.id);
+
+                                          setState(() {
+                                            studentList.removeAt(index);
+                                          });
+                                        })
+                                  ],
+                                ),
+                              );
+                            });
+                      }
+                      return new CircularProgressIndicator();
+                    },
+                  )
                 ],
               ),
             ),
@@ -81,11 +144,25 @@ class _MyHomePageState extends State<MyHomePage> {
       if (student == null) {
         Student st = new Student(
             name: _nameController.text, course: _courseController.text);
-        await DatabaseHelper.db.insertStudent(st).then((id) => {
-              print(id),
+        await DatabaseHelper.db
+            .insertStudent(st)
+            .then((id) => {
+                  _nameController.clear(),
+                  _courseController.clear(),
+                  print('Se ha agregado el estudiante ${id}')
+                })
+            .catchError((onError) => {print(onError)});
+      } else {
+        student.name = _nameController.text;
+        student.course = _courseController.text;
+        await DatabaseHelper.db.updateStudent(student).then((id) => {
+              setState(() {
+                studentList[updateIndex].name = _nameController.text;
+                studentList[updateIndex].course = _courseController.text;
+              }),
               _nameController.clear(),
               _courseController.clear(),
-              print('Se ha agregado el estudiante ${id}')
+              student = null,
             });
       }
     }
