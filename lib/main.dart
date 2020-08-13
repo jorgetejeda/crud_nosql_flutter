@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'Model/student.dart';
-import 'database.helper.dart';
+import 'data/moor_database.dart';
 
 void main() => runApp(MyApp());
 
@@ -8,6 +7,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -27,6 +27,9 @@ class _MyHomePageState extends State<MyHomePage> {
   final _nameController = TextEditingController();
   final _courseController = TextEditingController();
   final _formKey = new GlobalKey<FormState>();
+
+  final db = new AppDatabase();
+
   Student student;
   int updateIndex;
   List<Student> studentList;
@@ -71,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         _submitStudent(context);
                       }),
                   FutureBuilder(
-                    future: DatabaseHelper.db.getStudentList(),
+                    future: db.getAllStudent(),
                     builder: (context, snapShot) {
                       if (snapShot.hasData) {
                         studentList = snapShot.data;
@@ -116,8 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                           color: Colors.red,
                                         ),
                                         onPressed: () {
-                                          DatabaseHelper.db
-                                              .deleteStudent(st.id);
+                                          db.deleteStudent(st);
 
                                           setState(() {
                                             studentList.removeAt(index);
@@ -143,28 +145,29 @@ class _MyHomePageState extends State<MyHomePage> {
   void _submitStudent(BuildContext context) async {
     if (_formKey.currentState.validate()) {
       if (student == null) {
-        Student st = new Student(
-            name: _nameController.text, course: _courseController.text);
-        await DatabaseHelper.db
+        Student st =
+            Student(name: _nameController.text, course: _courseController.text);
+
+        await db
             .insertStudent(st)
             .then((id) => {
                   _nameController.clear(),
                   _courseController.clear(),
-                  print('Se ha agregado el estudiante ${id}')
+                  print('Se ha agregado el estudiante $id')
                 })
             .catchError((onError) => {print(onError)});
       } else {
-        student.name = _nameController.text;
-        student.course = _courseController.text;
-        await DatabaseHelper.db.updateStudent(student).then((id) => {
-              setState(() {
-                studentList[updateIndex].name = _nameController.text;
-                studentList[updateIndex].course = _courseController.text;
-              }),
-              _nameController.clear(),
-              _courseController.clear(),
-              student = null,
-            });
+        // student.name = _nameController.text;
+        // student.course = _courseController.text;
+        // await DatabaseHelper.db.updateStudent(student).then((id) => {
+        //       setState(() {
+        //         studentList[updateIndex].name = _nameController.text;
+        //         studentList[updateIndex].course = _courseController.text;
+        //       }),
+        //       _nameController.clear(),
+        //       _courseController.clear(),
+        //       student = null,
+        //     });
       }
     }
   }

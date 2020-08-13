@@ -9,7 +9,7 @@ class Students extends Table {
   TextColumn get course => text().withLength(min: 1, max: 50)();
 }
 
-@UserMoor(tables: [Students])
+@UseMoor(tables: [Students])
 class AppDatabase extends _$AppDatabase {
   AppDatabase()
       : super((FlutterQueryExecutor.inDatabaseFolder(
@@ -19,4 +19,9 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   int get schemaVersion => 1;
+
+  Future<List<Student>> getAllStudent() => select(students).get();
+  Future insertStudent(Student student) => into(students).insert(student);
+  Future updateStudent(Student student) => update(students).replace(student);
+  Future deleteStudent(Student student) => delete(students).delete(student);
 }
